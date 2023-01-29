@@ -1,11 +1,12 @@
 from PIL import Image
+from noise import pnoise2
 import os
 import random
 import colorsys
 
 
 class Artwork:
-    def __init__(self, size=(500, 500), grain=(0.1)):
+    def __init__(self, size=(500, 500), grain=(0), noise_density=2.5, noise_shift=2.0):
         self.img = Image.new("RGBA", size)
         self.colorway = (
             self.random_color(),
@@ -13,6 +14,9 @@ class Artwork:
             self.random_color(),
             self.random_color()
         )
+        self.noise_density = noise_density
+        self.noise_shift = noise_shift
+        self.noise_base = random.randint(0, 999)
         self.grain = grain
         self.create()
 
@@ -23,25 +27,46 @@ class Artwork:
 
                 self.img.putpixel((x, y), color)
 
+    def make_grain(self):
+        if self.grain > 0:
+            return random.uniform(
+                -1 * self.grain,
+                self.grain)
+        else:
+            return 0
+
+    def make_noise(self, percent_x, percernt_y):
+
+        return self.noise_density * pnoise2(
+            percent_x * self.noise_shift,
+            percernt_y * self.noise_shift,
+            base=self.noise_base)
+
     def get_color(self, x, y):
         (tl, tr, bl, br) = self.colorway
 
         percent_x = x / self.img.width
         percent_y = y / self.img.height
 
-        grain_x = random.uniform(-1 * self.grain, self.grain)
-        grain_y = random.uniform(-1 * self.grain, self.grain)
+        grain_x = self.make_grain()
+        grain_y = self.make_grain()
 
-        gradient1 = self.mix(tl, tr, percent_x + grain_x)
-        gradient2 = self.mix(bl, br, percent_x + grain_x)
+        noise_x = self.make_noise(percent_x, percent_y)
+        noise_y = self.make_noise(percent_x, percent_y)
 
-        gradient = self.mix(gradient1, gradient2, percent_y + grain_y)
+        gradient1 = self.mix(tl, tr, percent_x + grain_x + noise_x)
+        gradient2 = self.mix(bl, br, percent_x + grain_x + noise_x)
+
+        gradient = self.mix(gradient1, gradient2,
+                            percent_y + grain_y + noise_y)
 
         return gradient
 
     def mix(self, color1, color2, mixer):
         (r1, g1, b1, a1) = color1
         (r2, g2, b2, a2) = color2
+
+        mixer = max(0, min(mixer, 1))
 
         return (
             self.mix_colors(r1, r2, mixer),
