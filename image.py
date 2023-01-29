@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from noise import pnoise2
 import os
 import random
@@ -6,7 +6,7 @@ import colorsys
 
 
 class Artwork:
-    def __init__(self, size=(500, 500), grain=(0), noise_density=2.5, noise_shift=2.0):
+    def __init__(self, size=(500, 500), grain=(0.1), noise_density=2.5, noise_shift=2.0, debug=False):
         self.img = Image.new("RGBA", size)
         self.colorway = (
             self.random_color(),
@@ -18,7 +18,12 @@ class Artwork:
         self.noise_shift = noise_shift
         self.noise_base = random.randint(0, 999)
         self.grain = grain
+        self.debug = debug
+
         self.create()
+
+        if self.debug:
+            self.add_debug()
 
     def get_random_points(self):
         points = []
@@ -99,6 +104,30 @@ class Artwork:
 
         return (r, g, b, 255)
 
+    def add_debug(self):
+        drawer = ImageDraw.Draw(self.img)
+
+        (tl, tr, bl, br) = self.colorway
+        drawer.rectangle([16, 16, 24, 24], fill=tl)
+        drawer.rectangle([32, 16, 40, 24], fill=tr)
+        drawer.rectangle([48, 16, 56, 24], fill=bl)
+        drawer.rectangle([64, 16, 72, 24], fill=br)
+
+        messages = [
+            "Final Result:",
+            f"Grain level: {self.grain}",
+            f"Noise level: {self.noise_density}",
+            f"Noise shift: {self.noise_shift}"
+        ]
+
+        font = ImageFont.truetype("Arial", 16)
+        drawer.multiline_text(
+            (16, 32),
+            "\n".join(messages),
+            font=font,
+            fill=(0, 0, 0, 255)
+        )
+
     def save_to_file(self, filepath):
         self.img.save(filepath)
 
@@ -108,5 +137,5 @@ if __name__ == "__main__":
     os.makedirs("images", exist_ok=True)
     filepath = os.path.join("images", "test.png")
 
-    art = Artwork()
+    art = Artwork(debug=True)
     art.save_to_file(filepath)
