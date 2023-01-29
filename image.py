@@ -20,12 +20,20 @@ class Artwork:
         self.grain = grain
         self.create()
 
-    def create(self):
+    def get_random_points(self):
+        points = []
         for x in range(self.img.width):
             for y in range(self.img.height):
-                color = self.get_color(x, y)
+                points.append((x, y))
 
-                self.img.putpixel((x, y), color)
+        random.shuffle(points)
+
+        return points
+
+    def create(self):
+        for (x, y) in self.get_random_points():
+            color = self.get_color(x, y)
+            self.img.putpixel((x, y), color)
 
     def make_grain(self):
         if self.grain > 0:
