@@ -5,7 +5,7 @@ import colorsys
 
 
 class Artwork:
-    def __init__(self, size=(500, 500)):
+    def __init__(self, size=(500, 500), grain=(0.1)):
         self.img = Image.new("RGBA", size)
         self.colorway = (
             self.random_color(),
@@ -13,6 +13,7 @@ class Artwork:
             self.random_color(),
             self.random_color()
         )
+        self.grain = grain
         self.create()
 
     def create(self):
@@ -28,10 +29,13 @@ class Artwork:
         percent_x = x / self.img.width
         percent_y = y / self.img.height
 
-        gradient1 = self.mix(tl, tr, percent_x)
-        gradient2 = self.mix(bl, br, percent_x)
+        grain_x = random.uniform(-1 * self.grain, self.grain)
+        grain_y = random.uniform(-1 * self.grain, self.grain)
 
-        gradient = self.mix(gradient1, gradient2, percent_y)
+        gradient1 = self.mix(tl, tr, percent_x + grain_x)
+        gradient2 = self.mix(bl, br, percent_x + grain_x)
+
+        gradient = self.mix(gradient1, gradient2, percent_y + grain_y)
 
         return gradient
 
